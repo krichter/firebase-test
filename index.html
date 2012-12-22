@@ -3,14 +3,21 @@
     <title>Test Firebase Project</title>
     <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
     <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+    <script type="text/javascript" src="https://www.firebase.com/js/libs/idle.js"></script>
     <link rel='stylesheet' type='text/css' href='https://www.firebase.com/css/example.css'>
   </head>
   <body>
     <div id='messagesDiv'></div>
     <input type='text' id='nameInput' placeholder='Name'>
     <input type='text' id='messageInput' placeholder='Message'>
+    <div id="presenceDiv"></div>
     <script type='text/javascript'>
-      var dataRef = new Firebase('https://eventsynergy.firebaseio.com/');
+	   var name = prompt("Your name?", "Guest");
+	   $("#nameInput").val(name);
+      var dataRef = new Firebase('https://eventsynergy.firebaseio.com/test/chat');
+      var userListRef = new Firebase('https://eventsynergy.firebaseio.com/test/presence');
+      var myStatus = userListRef.child(name);
+      var currentStatus = '? online';
       $('#messageInput').keypress(function (e) {
         if (e.keyCode == 13) {
           var name = $('#nameInput').val();
@@ -27,6 +34,49 @@
         var message = snapshot.val();
         printChatMessage(message.name, message.text);
       });
+      function setUserStatus(status) {
+		    currentStatus = status;
+		    //if we lose our internet connection, we want ourselves removed from the list.
+		    myStatus.removeOnDisconnect();
+		    myStatus.set(status);
+		  }
+		  myStatus.on("value", function(snapshot) {
+		    if(snapshot.val() === null) {
+		      setUserStatus(currentStatus);
+		    }
+		  });
+  // Render someone's online status
+  function addStatus(snapshot) {
+    $('#presenceDiv').append($('<div/>').attr('id', snapshot.name()));
+    setStatus(snapshot);
+  }
+  //Remove the status of a user who left
+  function removeStatus(snapshot) {
+    $("#" + snapshot.name()).remove();
+  }
+  //Change a user's status
+  function setStatus(snapshot) {
+    $('#' + snapshot.name()).text(snapshot.name() + ' is currently ' + snapshot.val());
+  }
+
+  //Anytime an online status is added, removed, or changed, we want to update the GUI
+  userListRef.on('child_added', addStatus);
+  userListRef.on('child_removed', removeStatus);
+  userListRef.on('child_changed', setStatus);
+
+  // Use idle/away/back events created by idle.js to update our status information.;
+  document.onIdle = function () {
+    setUserStatus('? idle');
+  }
+  document.onAway = function () {
+    setUserStatus('? away');
+  }
+  document.onBack = function (isIdle, isAway) {
+    setUserStatus('? online');
+  }
+
+  setIdleTimeout(5000);
+  setAwayTimeout(10000);
     </script>
   </body>
 </html>
