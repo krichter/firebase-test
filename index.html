@@ -1,5 +1,32 @@
 <html>
-<body>
-This is a test
-</body>
+  <head>
+    <title>Test Firebase Project</title>
+    <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
+    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+    <link rel='stylesheet' type='text/css' href='https://www.firebase.com/css/example.css'>
+  </head>
+  <body>
+    <div id='messagesDiv'></div>
+    <input type='text' id='nameInput' placeholder='Name'>
+    <input type='text' id='messageInput' placeholder='Message'>
+    <script type='text/javascript'>
+      var dataRef = new Firebase('https://eventsynergy.firebaseio.com/');
+      $('#messageInput').keypress(function (e) {
+        if (e.keyCode == 13) {
+          var name = $('#nameInput').val();
+          var text = $('#messageInput').val();
+          dataRef.push({name: name, text: text});
+          $('#messageInput').val('');
+        }
+      });
+      function printChatMessage(name, text) {
+        $('<div/>').text(text).prepend($('<em/>').text(name+': ')).appendTo($('#messagesDiv'));
+        $('#messagesDiv')[0].scrollTop = $('#messagesDiv')[0].scrollHeight;
+      };
+      dataRef.on('child_added', function(snapshot) {
+        var message = snapshot.val();
+        printChatMessage(message.name, message.text);
+      });
+    </script>
+  </body>
 </html>
