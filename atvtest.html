@@ -1,0 +1,26 @@
+<html>
+<head>
+<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+</head>
+<body>
+<input type='button' onClick='testit();' value='Test It'/>
+
+<table border='1' id="messages"></table>
+
+<script type='text/javascript'>
+	function testit() {
+		var socket = new WebSocket("ws://192.168.1.108:9090/jsonrpc");
+		socket.onopen = function(){
+			console.log("Socket has been opened!");
+			socket.send('{ "jsonrpc": "2.0", "method": "Player.Open", "params": { "item": { "file": "http://192.168.1.103/archive/New/Bones.S07E13.HDTV.x264-LOL.mp4" } }, "id": 1 }');
+		}
+		socket.onmessage = function(msg){
+			console.log("Message",msg);
+
+			$('<tr/>').append($('<td/>').text(msg.data)).appendTo($('#messages'));
+		}
+	};
+</script>
+
+</body>
+</html>
